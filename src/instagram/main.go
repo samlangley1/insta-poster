@@ -17,9 +17,13 @@ type caption struct {
 
 func (caption *caption) buildCaption() string {
 	fullCaption := fmt.Sprintf(`%s
+
 	-----------
+
 	%s
+	
 	-----------
+
 	%s`, caption.summary, caption.cta, caption.hashtag)
 	return fullCaption
 }
