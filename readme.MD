@@ -1,6 +1,6 @@
 # Project Title
 
-insta-Post
+insta-post
 
 ## Description
 
