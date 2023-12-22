@@ -28,6 +28,7 @@ The application should always be run as a docker container and the following env
 | CAPTION_SUMMARY | *Advanced* Used for generating random captions from a set of provided values [*See docs*](#randomising-captions) | No |
 | CAPTION_CTA | *Advanced* Used for generating random captions from a set of provided values [*See docs*](#randomising-captions) | No |
 | CAPTION_HASHTAG | *Advanced* Used for generating random captions from a set of provided values [*See docs*](#randomising-captions) | No |
+| HTTP_PROXY | Proxy address if routing requests through a proxy | No |
 
 
 The image content can be stored in any folder, as long as you have permission to bindmount it to the Docker container.
@@ -36,8 +37,8 @@ The image directory MUST have a subdirectory matching the Instagram account name
 You can store multiple accounts images in the same place, but each account must have it's own subdirectory.
 
 ```
-- docker build -t insta-post:latest .
-- docker run -it -v image-directory-path:/opt/images insta-post:latest
+- docker build -t insta-poster:latest .
+- docker run -v image-directory-path:/opt/images insta-poster:latest
 ```
 
 In the above example, your image directory path would be ~/Documents/insta-poster
