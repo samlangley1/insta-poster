@@ -33,10 +33,12 @@ func main() {
           log.Fatalf("failed to log into account: %s", err)
   }
 
-  err = sess.SetProxy(os.Getenv("HTTP_PROXY"), true, true)
-  if err != nil {
-          log.Fatalf("failed to set proxy: %s", err)
-          }
+  if len(os.Getenv("HTTP_PROXY")) > 0 { 
+    err = sess.SetProxy(os.Getenv("HTTP_PROXY"), true, true)
+    if err != nil {
+            log.Fatalf("failed to set proxy: %s", err)
+            }
+  }
   // Post random image file to Instagram
   err = instagram.PostContent(sess, image)
   if err != nil {
