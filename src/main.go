@@ -12,7 +12,7 @@ import (
 func init() {
 	// loads values from .env into the system
 	if err := godotenv.Load(); err != nil {
-		log.Printf("No .env file found: %s", err)
+		log.Printf("failed to fetch env file: %s", err)
 	}
 }
 
@@ -37,20 +37,20 @@ func main() {
 	if len(conf.Network.ProxyAddress) > 0 {
 		err = sess.SetProxy(conf.Network.ProxyAddress, true, true)
 		if err != nil {
-			log.Fatalf("Failed to set proxy: %s", err)
+			log.Fatalf("failed to set proxy: %s", err)
 		}
 	}
 
 	// Post random image file to Instagram
 	err = instagram.PostContent(sess, image)
 	if err != nil {
-		log.Fatalf("Failed to post content: %s", err)
+		log.Fatalf("failed to post content: %s", err)
 	}
 	log.Println("uploaded content to instagram")
 
 	err = filesystem.MoveFileToPostedDirectory(conf.Filesystem.ImageDirectory, fileName)
 	if err != nil {
-		log.Fatalf("Failed to move file to posted directory: %s", err)
+		log.Fatalf("failed to move file to posted directory: %s", err)
 	}
 	log.Println("image file moved to posted directory")
 }
