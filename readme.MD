@@ -33,7 +33,7 @@ The application should always be run as a docker container and the following env
 
 The image content can be stored in any folder, as long as you have permission to bindmount it to the Docker container.
 
-The image directory MUST have a subdirectory matching the Instagram account name exactly, for example, if your images at stored at ~/Documents/insta-poster then your structure should be: ~/Documents/insta-poster/*account-name*/image.jpg
+The image directory MUST have a subdirectory matching the Instagram account name exactly, for example, if your images at stored at ~/Documents/insta-poster/images then your structure should be: ~/Documents/insta-poster/images/*account-name*/image.jpg
 You can store multiple accounts images in the same place, but each account must have it's own subdirectory.
 
 ```
@@ -41,14 +41,14 @@ You can store multiple accounts images in the same place, but each account must 
 - docker run -v image-directory-path:/opt/images insta-poster:latest
 ```
 
-In the above example, your image directory path would be ~/Documents/insta-poster
+In the above example, your image directory path would be ~/Documents/insta-poster/images
 
-For Windows users, make sure you use the \ syntax for filepath, e.g C:\Users\John\Documents\insta-poster
+For Windows users, make sure you use the \ syntax for filepath, e.g C:\Users\John\Documents\insta-poster\images
 
 
 ## Randomising Captions
 
-If you're looking to mix up your captions every post, rather than providing a static caption, there is functionality to build a caption from 3 sets of values, a value from each of the sets is generated at random and then built as a final caption. 
+If you're looking to mix up your captions every post, rather than providing a static caption, there is functionality to build a caption from 3 sets of values, a value from each of the sets is generated at random and then built as a final caption.
 
 Each caption is split into 3 sections, take the following caption for example:
 
@@ -60,7 +60,9 @@ Follow us for more amazing content!\
 
 
 Summary: This is the first line, used to provide context or summarise the post
+
 CTA: The middle section, used to provide a simple call to action
+
 Hashtags: Hashtags separated by a space
 
 To generate a random caption, three additional environment variables are required, as well as leaving the "POST_CAPTION" variable blank or omitting it completely.
