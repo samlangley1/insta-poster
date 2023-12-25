@@ -10,15 +10,22 @@ import (
 )
 
 func getRandomFile(files []fs.FileInfo) (string, error) {
-	randomIndex := rand.Intn(len(files))
-	// If a non-directory file is found, return one. Otherwise, return error as only directories are found.
+	// If a non-directory file is found, set validFilesExist to true.
+	validFilesExist := false
 	for _, v := range files {
 		if !v.IsDir() {
+			validFilesExist = true
 			break
 		}
+	}
+
+	// If no valid files were found, return error
+	if !validFilesExist {
 		return "", fmt.Errorf("no valid image files found in image directory")
 	}
+
 	// Select a random file until you get one that isn't a directory
+	randomIndex := rand.Intn(len(files))
 	for files[randomIndex].IsDir() {
 		randomIndex = rand.Intn(len(files))
 	}
@@ -42,7 +49,6 @@ func GetRandomContent(imageDirectory string) (io.Reader, string, error) {
 
 	// Generate full file path to the randomly selected file & convert to correct type with os.Open
 	fullFilePath := createFullFilePath(imageDirectory, fileName)
-
 	postContent, err := os.Open(fullFilePath)
 	if err != nil {
 		return nil, "", err
@@ -58,6 +64,8 @@ func createFullFilePath(directory string, fileName string) string {
 func MoveFileToPostedDirectory(directory string, fileName string) error {
 	currentLocation := createFullFilePath(directory, fileName)
 	postedDirectory := directory + "/posted"
+
+	// Create a /posted sub directory if it doesn't already exist
 	if _, err := os.Stat(postedDirectory); os.IsNotExist(err) {
 		err := os.Mkdir(postedDirectory, 0777)
 		if err != nil {
@@ -65,6 +73,7 @@ func MoveFileToPostedDirectory(directory string, fileName string) error {
 		}
 	}
 
+	// Move image file from it's current location to the /posted sub directory
 	err := os.Rename(currentLocation, postedDirectory+"/"+fileName)
 	if err != nil {
 		return err

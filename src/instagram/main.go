@@ -3,25 +3,28 @@ package instagram
 import (
 	"fmt"
 	"io"
+	"math/rand"
 	"os"
 	"strings"
-	"math/rand"
+
 	"github.com/Davincible/goinsta/v3"
 )
 
+// Full caption type for creating randomly generated captions
 type caption struct {
 	summary string
-	cta string
+	cta     string
 	hashtag string
 }
 
+// Build full Instagram caption from parts
 func (caption *caption) buildCaption() string {
 	fullCaption := fmt.Sprintf(`%s
 
 	-----------
 
 	%s
-	
+
 	-----------
 
 	%s`, caption.summary, caption.cta, caption.hashtag)
@@ -34,6 +37,7 @@ func randomItemFromList(list []string) string {
 	return randomItem
 }
 
+// Return a single string of concatenated randomly selected hashtags from a list of hashtags
 func randomHashtagAssortment(list []string, amountOfHashtags int) string {
 	hashtags := ""
 	for i := 0; i < amountOfHashtags; i++ {
@@ -44,6 +48,7 @@ func randomHashtagAssortment(list []string, amountOfHashtags int) string {
 	return hashtags
 }
 
+// Log into Instagram
 func CreateSession(accountName string, accountPassword string) (*goinsta.Instagram, error) {
 	insta := goinsta.New(accountName, accountPassword)
 	if err := insta.Login(); err != nil {
@@ -52,9 +57,11 @@ func CreateSession(accountName string, accountPassword string) (*goinsta.Instagr
 	return insta, nil
 }
 
-func PostContent(insta *goinsta.Instagram, uploadContent io.Reader) (error) {
+// Post content to logged in Instagram account
+func PostContent(insta *goinsta.Instagram, uploadContent io.Reader) error {
 	var postCaption string
-	if (os.Getenv("POST_CAPTION") == "") {
+	// Check for POST_CAPTION env var, which indicates the full caption is provided, otherwise, generate random caption from summary, cta, and hashtags
+	if os.Getenv("POST_CAPTION") == "" {
 		summaryList := strings.Split(os.Getenv("CAPTION_SUMMARY"), ",")
 		summary := randomItemFromList(summaryList)
 
@@ -66,21 +73,21 @@ func PostContent(insta *goinsta.Instagram, uploadContent io.Reader) (error) {
 
 		c := caption{
 			summary: summary,
-			cta: cta,
+			cta:     cta,
 			hashtag: hashtag,
 		}
 		postCaption = c.buildCaption()
 	} else {
 		postCaption = os.Getenv("POST_CAPTION")
 	}
-
+	// Upload image to Instagram with caption
 	_, err := insta.Upload(
 		&goinsta.UploadOptions{
 			File:    uploadContent,
-			Caption:  postCaption},
+			Caption: postCaption},
 	)
 	if err != nil {
-	  return err
+		return err
 	}
 	return nil
 }
