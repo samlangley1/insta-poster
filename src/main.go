@@ -26,6 +26,10 @@ func main() {
 	// Generate new config object from config package
 	conf := config.New()
 
+	sessionOptions := &instagram.SessionOptions{
+		ProxyAddress: conf.Network.ProxyAddress,
+	}
+
 	// Get random image file from image directory
 	image, fileName, err := filesystem.GetRandomContent(conf.Filesystem.ImageDirectory)
 	if err != nil {
@@ -35,19 +39,10 @@ func main() {
 
 	// Log into instagram account and create session
 	slog.Info("logging into: " + conf.Instagram.Username)
-	sess, err := instagram.CreateSession(conf.Instagram.Username, conf.Instagram.Password)
+	sess, err := instagram.CreateSession(conf.Instagram.Username, conf.Instagram.Password, sessionOptions)
 	if err != nil {
 		slog.Error("failed to log into account", "error", err)
 		os.Exit(1)
-	}
-
-	// Set proxy settings if provided
-	if len(conf.Network.ProxyAddress) > 0 {
-		err = sess.SetProxy(conf.Network.ProxyAddress, true, true)
-		if err != nil {
-			slog.Error("failed to set proxy", "error", err)
-			os.Exit(1)
-		}
 	}
 
 	// Post image to Instagram

@@ -10,6 +10,10 @@ import (
 	"github.com/Davincible/goinsta/v3"
 )
 
+type SessionOptions struct {
+	ProxyAddress string
+}
+
 // Full caption type for creating randomly generated captions
 type caption struct {
 	summary string
@@ -49,8 +53,15 @@ func randomHashtagAssortment(list []string, amountOfHashtags int) string {
 }
 
 // Log into Instagram
-func CreateSession(accountName string, accountPassword string) (*goinsta.Instagram, error) {
+func CreateSession(accountName string, accountPassword string, o *SessionOptions) (*goinsta.Instagram, error) {
 	insta := goinsta.New(accountName, accountPassword)
+	// Set proxy settings if provided
+	if len(o.ProxyAddress) > 0 {
+		err := insta.SetProxy(o.ProxyAddress, true, true)
+		if err != nil {
+			return nil, err
+		}
+	}
 	if err := insta.Login(); err != nil {
 		return nil, err
 	}
