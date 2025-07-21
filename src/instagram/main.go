@@ -6,7 +6,6 @@ import (
 	"math/rand"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/Davincible/goinsta/v3"
 )
@@ -67,46 +66,26 @@ func CreateSession(accountName string, accountPassword string, o *SessionOptions
 	if err := insta.Login(); err != nil {
 		fmt.Printf("Login failed: %v\n", err)
 
-		// Check if this is a 2FA challenge
+		// Check if this is a 2FA challenge that requires manual code entry
 		if insta.TwoFactorInfo != nil {
 			fmt.Println("2FA challenge detected.")
-			fmt.Println("Please check your Instagram app and approve the login request.")
-			fmt.Println("You have 30 seconds to approve... Press Enter after approving or wait.")
+			fmt.Print("Please enter the 6-digit code from your authenticator app or SMS: ")
 
-			// Start a goroutine to wait for user input
-			inputChan := make(chan bool, 1)
-			go func() {
-				fmt.Scanln() // Wait for user to press Enter
-				inputChan <- true
-			}()
+			var code string
+			fmt.Scanln(&code)
 
-			// Check for approval every 2 seconds, or when user presses Enter
-			approved := false
-		checkLoop:
-			for i := 0; i < 15; i++ { // Check for 30 seconds
-				select {
-				case <-inputChan:
-					// User pressed Enter, check immediately
-					if err := insta.TwoFactorInfo.Check2FATrusted(); err == nil {
-						approved = true
-						break checkLoop
-					}
-					fmt.Println("Not approved yet, continuing to check...")
-				case <-time.After(2 * time.Second):
-					// Regular check every 2 seconds
-					if err := insta.TwoFactorInfo.Check2FATrusted(); err == nil {
-						approved = true
-						break checkLoop
-					}
-				}
+			// Validate code format
+			if len(code) != 6 {
+				return nil, fmt.Errorf("invalid 2FA code - must be exactly 6 digits, got %d digits", len(code))
 			}
 
-			if approved {
-				fmt.Println("2FA approved! Login successful.")
-				return insta, nil
+			// Attempt 2FA login with the provided code
+			if err := insta.TwoFactorInfo.Login2FA(code); err != nil {
+				return nil, fmt.Errorf("2FA code verification failed: %w", err)
 			}
 
-			return nil, fmt.Errorf("2FA approval timeout - please try again and approve faster")
+			fmt.Println("2FA code verified! Login successful.")
+			return insta, nil
 		}
 
 		return nil, fmt.Errorf("login failed: %w", err)
