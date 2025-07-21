@@ -63,26 +63,50 @@ func CreateSession(accountName string, accountPassword string, o *SessionOptions
 			return nil, fmt.Errorf("failed to set proxy %s: %w", o.ProxyAddress, err)
 		}
 	}
-
 	// Attempt initial login
 	if err := insta.Login(); err != nil {
 		fmt.Printf("Login failed: %v\n", err)
 
 		// Check if this is a 2FA challenge
 		if insta.TwoFactorInfo != nil {
-			fmt.Println("2FA challenge detected. Please approve the 2FA request on your trusted device.")
-			fmt.Println("Checking for trusted device approval every 3 seconds for 60 seconds...")
+			fmt.Println("2FA challenge detected.")
+			fmt.Println("Please check your Instagram app and approve the login request.")
+			fmt.Println("You have 30 seconds to approve... Press Enter after approving or wait.")
 
-			// Check for trusted device approval (this is what Instagram app does)
-			for i := 0; i < 20; i++ { // Check 20 times (60 seconds total)
-				time.Sleep(3 * time.Second)
-				if err := insta.TwoFactorInfo.Check2FATrusted(); err == nil {
-					fmt.Println("2FA approved! Login successful.")
-					return insta, nil
+			// Start a goroutine to wait for user input
+			inputChan := make(chan bool, 1)
+			go func() {
+				fmt.Scanln() // Wait for user to press Enter
+				inputChan <- true
+			}()
+
+			// Check for approval every 2 seconds, or when user presses Enter
+			approved := false
+		checkLoop:
+			for i := 0; i < 15; i++ { // Check for 30 seconds
+				select {
+				case <-inputChan:
+					// User pressed Enter, check immediately
+					if err := insta.TwoFactorInfo.Check2FATrusted(); err == nil {
+						approved = true
+						break checkLoop
+					}
+					fmt.Println("Not approved yet, continuing to check...")
+				case <-time.After(2 * time.Second):
+					// Regular check every 2 seconds
+					if err := insta.TwoFactorInfo.Check2FATrusted(); err == nil {
+						approved = true
+						break checkLoop
+					}
 				}
 			}
 
-			return nil, fmt.Errorf("2FA approval timeout - please try again and approve the request faster")
+			if approved {
+				fmt.Println("2FA approved! Login successful.")
+				return insta, nil
+			}
+
+			return nil, fmt.Errorf("2FA approval timeout - please try again and approve faster")
 		}
 
 		return nil, fmt.Errorf("login failed: %w", err)
