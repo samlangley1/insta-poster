@@ -66,20 +66,29 @@ func CreateSession(accountName string, accountPassword string, o *SessionOptions
 
 	// Attempt initial login
 	if err := insta.Login(); err != nil {
-		fmt.Printf("Initial login failed, this might be a 2FA request: %v\n", err)
-		fmt.Println("Please approve the 2FA request on your phone if prompted. Waiting 60 seconds...")
+		fmt.Printf("Login failed: %v\n", err)
 
-		// Wait 60 seconds for user to approve 2FA
-		time.Sleep(60 * time.Second)
+		// Check if this is a 2FA challenge
+		if insta.TwoFactorInfo != nil {
+			fmt.Println("2FA challenge detected. Please approve the 2FA request on your trusted device.")
+			fmt.Println("Checking for trusted device approval every 3 seconds for 60 seconds...")
 
-		// Retry login after waiting
-		if err := insta.Login(); err != nil {
-			return nil, fmt.Errorf("login failed after 2FA wait: %w", err)
+			// Check for trusted device approval (this is what Instagram app does)
+			for i := 0; i < 20; i++ { // Check 20 times (60 seconds total)
+				time.Sleep(3 * time.Second)
+				if err := insta.TwoFactorInfo.Check2FATrusted(); err == nil {
+					fmt.Println("2FA approved! Login successful.")
+					return insta, nil
+				}
+			}
+
+			return nil, fmt.Errorf("2FA approval timeout - please try again and approve the request faster")
 		}
-		fmt.Println("Login successful after 2FA wait!")
-	} else {
-		fmt.Println("Login successful!")
+
+		return nil, fmt.Errorf("login failed: %w", err)
 	}
+
+	fmt.Println("Login successful!")
 
 	return insta, nil
 }
