@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/Davincible/goinsta/v3"
 )
@@ -55,16 +56,31 @@ func randomHashtagAssortment(list []string, amountOfHashtags int) string {
 // Log into Instagram
 func CreateSession(accountName string, accountPassword string, o *SessionOptions) (*goinsta.Instagram, error) {
 	insta := goinsta.New(accountName, accountPassword)
+
 	// Set proxy settings if provided
 	if len(o.ProxyAddress) > 0 {
-		err := insta.SetProxy(o.ProxyAddress, true, true)
-		if err != nil {
-			return nil, err
+		if err := insta.SetProxy(o.ProxyAddress, true, true); err != nil {
+			return nil, fmt.Errorf("failed to set proxy %s: %w", o.ProxyAddress, err)
 		}
 	}
+
+	// Attempt initial login
 	if err := insta.Login(); err != nil {
-		return nil, err
+		fmt.Printf("Initial login failed, this might be a 2FA request: %v\n", err)
+		fmt.Println("Please approve the 2FA request on your phone if prompted. Waiting 60 seconds...")
+
+		// Wait 60 seconds for user to approve 2FA
+		time.Sleep(60 * time.Second)
+
+		// Retry login after waiting
+		if err := insta.Login(); err != nil {
+			return nil, fmt.Errorf("login failed after 2FA wait: %w", err)
+		}
+		fmt.Println("Login successful after 2FA wait!")
+	} else {
+		fmt.Println("Login successful!")
 	}
+
 	return insta, nil
 }
 
