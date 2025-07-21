@@ -1,6 +1,7 @@
 package instagram
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"math/rand"
@@ -71,8 +72,15 @@ func CreateSession(accountName string, accountPassword string, o *SessionOptions
 			fmt.Println("2FA challenge detected.")
 			fmt.Print("Please enter the 6-digit code from your authenticator app or SMS: ")
 
-			var code string
-			fmt.Scanln(&code)
+			// Use bufio for more reliable input reading
+			reader := bufio.NewReader(os.Stdin)
+			code, err := reader.ReadString('\n')
+			if err != nil {
+				return nil, fmt.Errorf("failed to read 2FA code: %w", err)
+			}
+
+			// Clean up the input (remove newline and whitespace)
+			code = strings.TrimSpace(code)
 
 			// Validate code format
 			if len(code) != 6 {
